@@ -393,11 +393,14 @@ impl Distribution<configs::eth_sender::GasAdjusterConfig> for EncodeDist {
     }
 }
 
-impl Distribution<configs::EthWatchConfig> for EncodeDist {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> configs::EthWatchConfig {
-        configs::EthWatchConfig {
+impl Distribution<configs::ChainWatchConfig> for EncodeDist {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> configs::ChainWatchConfig {
+        configs::ChainWatchConfig {
             confirmations_for_eth_event: self.sample(rng),
             eth_node_poll_interval: self.sample(rng),
+            confirmations_for_bnb_event: self.sample(rng),
+            bnb_node_poll_interval: self.sample(rng),
+
         }
     }
 }

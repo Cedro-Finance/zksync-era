@@ -198,13 +198,16 @@ impl ProtoRepr for proto::GasAdjuster {
 }
 
 impl ProtoRepr for proto::EthWatch {
-    type Type = configs::EthWatchConfig;
+    type Type = configs::ChainWatchConfig;
 
     fn read(&self) -> anyhow::Result<Self::Type> {
         Ok(Self::Type {
             confirmations_for_eth_event: self.confirmations_for_eth_event,
             eth_node_poll_interval: *required(&self.eth_node_poll_interval)
                 .context("eth_node_poll_interval")?,
+            confirmations_for_bnb_event: self.confirmations_for_eth_event, // TODO: change this later 
+            bnb_node_poll_interval: *required(&self.eth_node_poll_interval)
+            .context("eth_node_poll_interval")?,
         })
     }
 

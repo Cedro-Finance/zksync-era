@@ -5,7 +5,7 @@ pub use self::{
     contracts::{ContractsConfig, EcosystemContracts},
     database::{DBConfig, PostgresConfig},
     eth_sender::{EthConfig, GasAdjusterConfig},
-    eth_watch::EthWatchConfig,
+    eth_watch::ChainWatchConfig,
     experimental::ExperimentalDBConfig,
     fri_proof_compressor::FriProofCompressorConfig,
     fri_prover::FriProverConfig,

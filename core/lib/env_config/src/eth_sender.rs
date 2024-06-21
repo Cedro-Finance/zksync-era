@@ -1,7 +1,7 @@
 use anyhow::Context as _;
 use zksync_config::{
     configs::{eth_sender::SenderConfig, L1Secrets},
-    EthConfig, EthWatchConfig, GasAdjusterConfig,
+    EthConfig, ChainWatchConfig, GasAdjusterConfig,
 };
 
 use crate::{envy_load, FromEnv};
@@ -11,7 +11,7 @@ impl FromEnv for EthConfig {
         Ok(Self {
             sender: SenderConfig::from_env().ok(),
             gas_adjuster: GasAdjusterConfig::from_env().ok(),
-            watcher: EthWatchConfig::from_env().ok(),
+            watcher: ChainWatchConfig::from_env().ok(),
         })
     }
 }
@@ -85,9 +85,11 @@ mod tests {
                     internal_pubdata_pricing_multiplier: 1.0,
                     max_blob_base_fee: None,
                 }),
-                watcher: Some(EthWatchConfig {
+                watcher: Some(ChainWatchConfig {
                     confirmations_for_eth_event: Some(0),
                     eth_node_poll_interval: 300,
+                    confirmations_for_bnb_event: Some(0),
+                    bnb_node_poll_interval: 300,
                 }),
             },
             L1Secrets {

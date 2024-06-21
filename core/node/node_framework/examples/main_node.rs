@@ -15,7 +15,7 @@ use zksync_config::{
         DatabaseSecrets, FriProofCompressorConfig, FriProverConfig, FriWitnessGeneratorConfig,
         L1Secrets, ObservabilityConfig, ProofDataHandlerConfig,
     },
-    ApiConfig, ContractVerifierConfig, ContractsConfig, DBConfig, EthConfig, EthWatchConfig,
+    ApiConfig, ContractVerifierConfig, ContractsConfig, DBConfig, EthConfig, ChainWatchConfig,
     GasAdjusterConfig, GenesisConfig, ObjectStoreConfig, PostgresConfig,
 };
 use zksync_env_config::FromEnv;
@@ -180,7 +180,7 @@ impl MainNodeBuilder {
 
     fn add_eth_watch_layer(mut self) -> anyhow::Result<Self> {
         self.node.add_layer(EthWatchLayer::new(
-            EthWatchConfig::from_env()?,
+            ChainWatchConfig::from_env()?,
             ContractsConfig::from_env()?,
         ));
         Ok(self)

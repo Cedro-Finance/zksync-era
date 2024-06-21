@@ -16,7 +16,7 @@ use zksync_config::{
         L1Secrets, ObservabilityConfig, PrometheusConfig, ProofDataHandlerConfig,
         ProtectiveReadsWriterConfig, Secrets,
     },
-    ApiConfig, ContractVerifierConfig, DBConfig, EthConfig, EthWatchConfig, GasAdjusterConfig,
+    ApiConfig, ContractVerifierConfig, DBConfig, EthConfig, ChainWatchConfig, GasAdjusterConfig,
     GenesisConfig, ObjectStoreConfig, PostgresConfig, SnapshotsCreatorConfig,
 };
 use zksync_core_leftovers::{
@@ -264,7 +264,7 @@ fn load_env_config() -> anyhow::Result<TempConfigStore> {
         api_config: ApiConfig::from_env().ok(),
         db_config: DBConfig::from_env().ok(),
         eth_sender_config: EthConfig::from_env().ok(),
-        eth_watch_config: EthWatchConfig::from_env().ok(),
+        eth_watch_config: ChainWatchConfig::from_env().ok(),
         gas_adjuster_config: GasAdjusterConfig::from_env().ok(),
         observability: ObservabilityConfig::from_env().ok(),
         snapshot_creator: SnapshotsCreatorConfig::from_env().ok(),

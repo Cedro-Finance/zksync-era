@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use zksync_config::{ContractsConfig, EthWatchConfig};
+use zksync_config::{ContractsConfig, ChainWatchConfig};
 use zksync_contracts::governance_contract;
 use zksync_dal::{ConnectionPool, Core};
 use zksync_eth_watch::{EthHttpQueryClient, EthWatch};
@@ -29,12 +29,12 @@ use crate::{
 /// - [`EthWatchTask`] (as [`Task`])
 #[derive(Debug)]
 pub struct EthWatchLayer {
-    eth_watch_config: EthWatchConfig,
+    eth_watch_config: ChainWatchConfig,
     contracts_config: ContractsConfig,
 }
 
 impl EthWatchLayer {
-    pub fn new(eth_watch_config: EthWatchConfig, contracts_config: ContractsConfig) -> Self {
+    pub fn new(eth_watch_config: ChainWatchConfig, contracts_config: ContractsConfig) -> Self {
         Self {
             eth_watch_config,
             contracts_config,
