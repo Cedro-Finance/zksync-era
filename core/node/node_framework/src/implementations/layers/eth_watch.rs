@@ -62,6 +62,7 @@ impl WiringLayer for EthWatchLayer {
         let client = context.get_resource::<EthInterfaceResource>().await?.0;
 
         let eth_client = ChainHttpQueryClient::new(
+            String::from("eth_client"),
             client.clone(),
             self.contracts_config.diamond_proxy_addr,
             self.contracts_config
@@ -74,6 +75,7 @@ impl WiringLayer for EthWatchLayer {
 
         // sw: have used all the contract details of the ethereum client, need to use the contract details of the bnb chain itself.
         let bnb_client = ChainHttpQueryClient::new(
+            String::from("bnb_client"),
             client.clone(),
             self.contracts_config.diamond_proxy_addr,
             self.contracts_config

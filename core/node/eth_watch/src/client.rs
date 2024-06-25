@@ -39,6 +39,7 @@ const TOO_MANY_RESULTS_ALCHEMY: &str = "response size exceeded";
 #[derive(Debug)]
 pub struct ChainHttpQueryClient {
     // sw: changed name from EthHttpQueryClient to ChainHttpQueryClient
+    name: String,
     client: Box<DynClient<L1>>,
     topics: Vec<H256>,
     diamond_proxy_addr: Address,
@@ -51,6 +52,7 @@ pub struct ChainHttpQueryClient {
 
 impl ChainHttpQueryClient {
     pub fn new(
+        name: String, 
         client: Box<DynClient<L1>>,
         diamond_proxy_addr: Address,
         state_transition_manager_address: Option<Address>,
@@ -63,6 +65,7 @@ impl ChainHttpQueryClient {
             governance_address
         );
         Self {
+            name,
             client: client.for_component("watch"),
             topics: Vec::new(),
             diamond_proxy_addr,
