@@ -76,6 +76,10 @@ impl ChainHttpQueryClient {
         }
     }
 
+    pub fn name(&self) -> String {
+        self.name.clone()
+    }
+
     async fn get_filter_logs(
         &self,
         from: BlockNumber,
@@ -125,7 +129,7 @@ impl EthClient for ChainHttpQueryClient {
         // This code is compatible with both Infura and Alchemy API providers.
         // Note: we don't handle rate-limits here - assumption is that we're never going to hit them.
         if let Err(err) = &result {
-            tracing::warn!("Provider returned error message: {err}");
+            tracing::warn!("{}: Provider returned error message: {err}", self.name);
             let err_message = err.as_ref().to_string();
             let err_code = if let ClientError::Call(err) = err.as_ref() {
                 Some(err.code())
@@ -166,11 +170,14 @@ impl EthClient for ChainHttpQueryClient {
 
                 // safety check to prevent infinite recursion (quite unlikely)
                 if from_number >= mid {
-                    tracing::warn!("Infinite recursion detected while getting events: from_number={from_number:?}, mid={mid:?}");
+                    tracing::warn!("{}: Infinite recursion detected while getting events: from_number={from_number:?}, mid={mid:?}", self.name);
                     return result;
                 }
 
-                tracing::warn!("Splitting block range in half: {from:?} - {mid:?} - {to:?}");
+                tracing::warn!(
+                    "{}: Splitting block range in half: {from:?} - {mid:?} - {to:?}",
+                    self.name
+                );
                 let mut first_half = self
                     .get_events(from, BlockNumber::Number(mid), RETRY_LIMIT)
                     .await?;
@@ -181,7 +188,7 @@ impl EthClient for ChainHttpQueryClient {
                 first_half.append(&mut second_half);
                 result = Ok(first_half);
             } else if should_retry(err_code, err_message) && retries_left > 0 {
-                tracing::warn!("Retrying. Retries left: {retries_left}");
+                tracing::warn!("{}: Retrying. Retries left: {retries_left}", self.name);
                 result = self.get_events(from, to, retries_left - 1).await;
             }
         }
