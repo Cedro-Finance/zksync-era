@@ -52,7 +52,7 @@ pub struct ChainHttpQueryClient {
 
 impl ChainHttpQueryClient {
     pub fn new(
-        name: String, 
+        name: String,
         client: Box<DynClient<L1>>,
         diamond_proxy_addr: Address,
         state_transition_manager_address: Option<Address>,
