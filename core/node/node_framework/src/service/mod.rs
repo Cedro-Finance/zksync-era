@@ -97,7 +97,6 @@ impl ZkStackService {
     pub fn run(mut self) -> Result<(), ZkStackServiceError> {
         // Initialize tasks.
         let wiring_layers = std::mem::take(&mut self.layers);
-
         let mut errors: Vec<(String, WiringError)> = Vec::new();
 
         let runtime_handle = self.runtime.handle().clone();

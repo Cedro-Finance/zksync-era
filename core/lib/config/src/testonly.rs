@@ -400,7 +400,6 @@ impl Distribution<configs::ChainWatchConfig> for EncodeDist {
             eth_node_poll_interval: self.sample(rng),
             confirmations_for_bnb_event: self.sample(rng),
             bnb_node_poll_interval: self.sample(rng),
-
         }
     }
 }
