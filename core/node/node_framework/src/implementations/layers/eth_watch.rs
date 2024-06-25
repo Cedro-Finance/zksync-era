@@ -1,9 +1,10 @@
 use std::time::Duration;
 
-use zksync_config::{ContractsConfig, ChainWatchConfig};
+use zksync_config::configs::eth_watch::Chains::{BNB, ETH};
+use zksync_config::{ChainWatchConfig, ContractsConfig};
 use zksync_contracts::governance_contract;
 use zksync_dal::{ConnectionPool, Core};
-use zksync_eth_watch::{EthHttpQueryClient, EthWatch};
+use zksync_eth_watch::{ChainHttpQueryClient, EthWatch};
 use zksync_types::{ethabi::Contract, Address};
 
 use crate::{
@@ -29,46 +30,72 @@ use crate::{
 /// - [`EthWatchTask`] (as [`Task`])
 #[derive(Debug)]
 pub struct EthWatchLayer {
-    eth_watch_config: ChainWatchConfig,
-    contracts_config: ContractsConfig,
+    chain_watch_config: ChainWatchConfig,
+    contracts_config: ContractsConfig, // sw: maybe needed to add here
 }
 
 impl EthWatchLayer {
-    pub fn new(eth_watch_config: ChainWatchConfig, contracts_config: ContractsConfig) -> Self {
+    pub fn new(chain_watch_config: ChainWatchConfig, contracts_config: ContractsConfig) -> Self {
         Self {
-            eth_watch_config,
+            chain_watch_config,
             contracts_config,
         }
     }
 }
 
+// sw: make changes to add bnb chain
 #[async_trait::async_trait]
 impl WiringLayer for EthWatchLayer {
     fn layer_name(&self) -> &'static str {
-        "eth_watch_layer"
+        "chain_watch_layer" // sw: changed the name from eth_watch_layer to chain_watch layer
     }
 
     async fn wire(self: Box<Self>, mut context: ServiceContext<'_>) -> Result<(), WiringError> {
+        // sw: this has already made the resource for running this task, now we also have to add the resource to accomodate the bnb chain
         let pool_resource = context.get_resource::<PoolResource<MasterPool>>().await?;
-        let main_pool = pool_resource.get().await.unwrap();
 
+        // sw: dont know if these two things are clonable
+        let main_pool = pool_resource.get().await.unwrap();
+        // sw: i can create a new task for this here so i will be creating a new bnb task
         let client = context.get_resource::<EthInterfaceResource>().await?.0;
 
-        let eth_client = EthHttpQueryClient::new(
-            client,
+        let eth_client = ChainHttpQueryClient::new(
+            client.clone(),
             self.contracts_config.diamond_proxy_addr,
             self.contracts_config
                 .ecosystem_contracts
+                .clone()
                 .map(|a| a.transparent_proxy_admin_addr),
             self.contracts_config.governance_addr,
-            self.eth_watch_config.confirmations_for_eth_event,
+            self.chain_watch_config.confirmations_for_eth_event,
         );
-        context.add_task(Box::new(EthWatchTask {
-            main_pool,
+
+        // sw: have used all the contract details of the ethereum client, need to use the contract details of the bnb chain itself.
+        let bnb_client = ChainHttpQueryClient::new(
+            client.clone(),
+            self.contracts_config.diamond_proxy_addr,
+            self.contracts_config
+                .ecosystem_contracts
+                .clone()
+                .map(|a| a.transparent_proxy_admin_addr),
+            self.contracts_config.governance_addr,
+            self.chain_watch_config.confirmations_for_bnb_event,
+        );
+
+        context.add_task(Box::new(ChainWatchTask {
+            main_pool: main_pool.clone(),
             client: eth_client,
             governance_contract: governance_contract(),
             diamond_proxy_address: self.contracts_config.diamond_proxy_addr,
-            poll_interval: self.eth_watch_config.poll_interval(),
+            poll_interval: self.chain_watch_config.poll_interval(ETH),
+        }));
+
+        context.add_task(Box::new(ChainWatchTask {
+            main_pool: main_pool.clone(),
+            client: bnb_client,
+            governance_contract: governance_contract(),
+            diamond_proxy_address: self.contracts_config.diamond_proxy_addr,
+            poll_interval: self.chain_watch_config.poll_interval(BNB),
         }));
 
         Ok(())
@@ -76,18 +103,19 @@ impl WiringLayer for EthWatchLayer {
 }
 
 #[derive(Debug)]
-struct EthWatchTask {
+struct ChainWatchTask {
+    // sw: renamed from EthWatchTask to chain watch task
     main_pool: ConnectionPool<Core>,
-    client: EthHttpQueryClient,
+    client: ChainHttpQueryClient, // sw: should change the name of this aswell
     governance_contract: Contract,
     diamond_proxy_address: Address,
     poll_interval: Duration,
 }
 
 #[async_trait::async_trait]
-impl Task for EthWatchTask {
+impl Task for ChainWatchTask {
     fn id(&self) -> TaskId {
-        "eth_watch".into()
+        "chain_watch".into() // sw: changed the name of the task
     }
 
     async fn run(self: Box<Self>, stop_receiver: StopReceiver) -> anyhow::Result<()> {
