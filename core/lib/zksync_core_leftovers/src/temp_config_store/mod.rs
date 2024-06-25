@@ -12,7 +12,7 @@ use zksync_config::{
         FriWitnessGeneratorConfig, FriWitnessVectorGeneratorConfig, GeneralConfig,
         ObservabilityConfig, PrometheusConfig, ProofDataHandlerConfig, ProtectiveReadsWriterConfig,
     },
-    ApiConfig, ContractVerifierConfig, DBConfig, EthConfig, ChainWatchConfig, GasAdjusterConfig,
+    ApiConfig, ChainWatchConfig, ContractVerifierConfig, DBConfig, EthConfig, GasAdjusterConfig,
     ObjectStoreConfig, PostgresConfig, SnapshotsCreatorConfig,
 };
 use zksync_protobuf::repr::ProtoRepr;

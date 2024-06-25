@@ -16,7 +16,7 @@ use zksync_config::{
         L1Secrets, ObservabilityConfig, PrometheusConfig, ProofDataHandlerConfig,
         ProtectiveReadsWriterConfig, Secrets,
     },
-    ApiConfig, ContractVerifierConfig, DBConfig, EthConfig, ChainWatchConfig, GasAdjusterConfig,
+    ApiConfig, ChainWatchConfig, ContractVerifierConfig, DBConfig, EthConfig, GasAdjusterConfig,
     GenesisConfig, ObjectStoreConfig, PostgresConfig, SnapshotsCreatorConfig,
 };
 use zksync_core_leftovers::{

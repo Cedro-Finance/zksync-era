@@ -13,7 +13,7 @@ use zksync_types::{
     web3::BlockNumber as Web3BlockNumber, Address, PriorityOpId,
 };
 
-pub use self::client::EthHttpQueryClient;
+pub use self::client::ChainHttpQueryClient;
 use self::{
     client::{EthClient, RETRY_LIMIT},
     event_processors::{

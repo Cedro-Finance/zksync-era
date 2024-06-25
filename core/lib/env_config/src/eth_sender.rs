@@ -1,7 +1,7 @@
 use anyhow::Context as _;
 use zksync_config::{
     configs::{eth_sender::SenderConfig, L1Secrets},
-    EthConfig, ChainWatchConfig, GasAdjusterConfig,
+    ChainWatchConfig, EthConfig, GasAdjusterConfig,
 };
 
 use crate::{envy_load, FromEnv};

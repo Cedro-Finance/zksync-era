@@ -15,7 +15,7 @@ use zksync_config::{
         DatabaseSecrets, FriProofCompressorConfig, FriProverConfig, FriWitnessGeneratorConfig,
         L1Secrets, ObservabilityConfig, ProofDataHandlerConfig,
     },
-    ApiConfig, ContractVerifierConfig, ContractsConfig, DBConfig, EthConfig, ChainWatchConfig,
+    ApiConfig, ChainWatchConfig, ContractVerifierConfig, ContractsConfig, DBConfig, EthConfig,
     GasAdjusterConfig, GenesisConfig, ObjectStoreConfig, PostgresConfig,
 };
 use zksync_env_config::FromEnv;
