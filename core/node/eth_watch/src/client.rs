@@ -37,7 +37,7 @@ const TOO_MANY_RESULTS_ALCHEMY: &str = "response size exceeded";
 
 /// Implementation of [`EthClient`] based on HTTP JSON-RPC (encapsulated via [`EthInterface`]).
 #[derive(Debug)]
-pub struct EthHttpQueryClient {
+pub struct ChainHttpQueryClient { // sw: changed name from EthHttpQueryClient to ChainHttpQueryClient
     client: Box<DynClient<L1>>,
     topics: Vec<H256>,
     diamond_proxy_addr: Address,
@@ -48,7 +48,7 @@ pub struct EthHttpQueryClient {
     confirmations_for_eth_event: Option<u64>,
 }
 
-impl EthHttpQueryClient {
+impl ChainHttpQueryClient {
     pub fn new(
         client: Box<DynClient<L1>>,
         diamond_proxy_addr: Address,
@@ -98,7 +98,7 @@ impl EthHttpQueryClient {
 }
 
 #[async_trait::async_trait]
-impl EthClient for EthHttpQueryClient {
+impl EthClient for ChainHttpQueryClient {
     async fn scheduler_vk_hash(
         &self,
         verifier_address: Address,
