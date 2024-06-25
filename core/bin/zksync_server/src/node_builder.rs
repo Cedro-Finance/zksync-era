@@ -19,7 +19,7 @@ use zksync_node_framework::{
         consensus::{ConsensusLayer, Mode as ConsensusMode},
         contract_verification_api::ContractVerificationApiLayer,
         eth_sender::{EthTxAggregatorLayer, EthTxManagerLayer},
-        eth_watch::EthWatchLayer,
+        eth_watch::ChainWatchLayer,
         healtcheck_server::HealthCheckLayer,
         house_keeper::HouseKeeperLayer,
         l1_batch_commitment_mode_validation::L1BatchCommitmentModeValidationLayer,
@@ -231,7 +231,7 @@ impl MainNodeBuilder {
 
     fn add_eth_watch_layer(mut self) -> anyhow::Result<Self> {
         let eth_config = try_load_config!(self.configs.eth);
-        self.node.add_layer(EthWatchLayer::new(
+        self.node.add_layer(ChainWatchLayer::new(
             try_load_config!(eth_config.watcher),
             self.contracts_config.clone(),
         ));

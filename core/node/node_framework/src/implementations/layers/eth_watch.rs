@@ -31,12 +31,13 @@ use crate::{
 /// ## Adds tasks
 /// - [`EthWatchTask`] (as [`Task`])
 #[derive(Debug)]
-pub struct EthWatchLayer {
+pub struct ChainWatchLayer {
+    // sw: changed the name from EthWatchLayer to ChainWatchLayer
     chain_watch_config: ChainWatchConfig,
     contracts_config: ContractsConfig, // sw: maybe needed to add here
 }
 
-impl EthWatchLayer {
+impl ChainWatchLayer {
     pub fn new(chain_watch_config: ChainWatchConfig, contracts_config: ContractsConfig) -> Self {
         Self {
             chain_watch_config,
@@ -47,7 +48,7 @@ impl EthWatchLayer {
 
 // sw: make changes to add bnb chain
 #[async_trait::async_trait]
-impl WiringLayer for EthWatchLayer {
+impl WiringLayer for ChainWatchLayer {
     fn layer_name(&self) -> &'static str {
         "chain_watch_layer" // sw: changed the name from eth_watch_layer to chain_watch layer
     }

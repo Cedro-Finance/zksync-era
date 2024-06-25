@@ -30,7 +30,7 @@ use zksync_node_framework::{
         commitment_generator::CommitmentGeneratorLayer,
         contract_verification_api::ContractVerificationApiLayer,
         eth_sender::{EthTxAggregatorLayer, EthTxManagerLayer},
-        eth_watch::EthWatchLayer,
+        eth_watch::ChainWatchLayer,
         healtcheck_server::HealthCheckLayer,
         house_keeper::HouseKeeperLayer,
         l1_gas::SequencerL1GasLayer,
@@ -181,7 +181,7 @@ impl MainNodeBuilder {
     }
 
     fn add_eth_watch_layer(mut self) -> anyhow::Result<Self> {
-        self.node.add_layer(EthWatchLayer::new(
+        self.node.add_layer(ChainWatchLayer::new(
             ChainWatchConfig::from_env()?,
             ContractsConfig::from_env()?,
         ));
