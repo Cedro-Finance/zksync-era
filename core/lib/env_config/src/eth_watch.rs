@@ -20,7 +20,7 @@ mod tests {
             confirmations_for_eth_event: Some(0),
             eth_node_poll_interval: 300,
             bnb_node_poll_interval: 300,
-            confirmations_for_bnb_event: Some(0)
+            confirmations_for_bnb_event: Some(0),
         }
     }
 

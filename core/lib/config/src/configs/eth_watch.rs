@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 pub enum Chains {
     ETH,
-    BNB
+    BNB,
 }
 
 /// Configuration for the Ethereum watch crate.
@@ -16,7 +16,7 @@ pub struct ChainWatchConfig {
     /// How often we want to poll the Ethereum node.
     /// Value in milliseconds.
     pub eth_node_poll_interval: u64,
-/// Amount of confirmations for the priority operation to be processed.
+    /// Amount of confirmations for the priority operation to be processed.
     /// If not specified operation will be processed once its block is finalized.
     pub confirmations_for_bnb_event: Option<u64>,
     /// How often we want to poll the Ethereum node.
@@ -24,18 +24,18 @@ pub struct ChainWatchConfig {
     pub bnb_node_poll_interval: u64,
 }
 
-use Chains::{ETH, BNB};
+use Chains::{BNB, ETH};
 impl ChainWatchConfig {
     /// Converts `self.eth_node_poll_interval` into `Duration`.
     pub fn poll_interval(&self, chain: Chains) -> Duration {
         match chain {
             ETH => Duration::from_millis(self.eth_node_poll_interval),
-            BNB => Duration::from_millis(self.bnb_node_poll_interval)
+            BNB => Duration::from_millis(self.bnb_node_poll_interval),
         }
     }
 }
 
-#[test] 
+#[test]
 fn poll_interval() {
     let chain_watch_config = ChainWatchConfig {
         confirmations_for_bnb_event: Some(1),
