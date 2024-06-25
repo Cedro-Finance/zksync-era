@@ -1,7 +1,9 @@
 use std::time::Duration;
 
-use zksync_config::configs::eth_watch::Chains::{BNB, ETH};
-use zksync_config::{ChainWatchConfig, ContractsConfig};
+use zksync_config::{
+    configs::eth_watch::Chains::{BNB, ETH},
+    ChainWatchConfig, ContractsConfig,
+};
 use zksync_contracts::governance_contract;
 use zksync_dal::{ConnectionPool, Core};
 use zksync_eth_watch::{ChainHttpQueryClient, EthWatch};
