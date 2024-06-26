@@ -87,9 +87,9 @@ mod tests {
                 }),
                 watcher: Some(ChainWatchConfig {
                     confirmations_for_eth_event: Some(0),
-                    eth_node_poll_interval: 300,
+                    eth_node_poll_interval: 30,
                     confirmations_for_bnb_event: Some(0),
-                    bnb_node_poll_interval: 300,
+                    bnb_node_poll_interval: 30,
                 }),
             },
             L1Secrets {
@@ -103,8 +103,10 @@ mod tests {
     fn from_env() {
         let mut lock = MUTEX.lock();
         let config = r#"
-            ETH_WATCH_CONFIRMATIONS_FOR_ETH_EVENT = "0"
-            ETH_WATCH_ETH_NODE_POLL_INTERVAL = "30"
+            CHAIN_WATCH_CONFIRMATIONS_FOR_ETH_EVENT="0"
+            CHAIN_WATCH_ETH_NODE_POLL_INTERVAL="30"
+            CHAIN_WATCH_CONFIRMATIONS_FOR_BNB_EVENT="0"
+            CHAIN_WATCH_BNB_NODE_POLL_INTERVAL="30"
             ETH_SENDER_SENDER_WAIT_CONFIRMATIONS="1"
             ETH_SENDER_SENDER_TX_POLL_PERIOD="3"
             ETH_SENDER_SENDER_AGGREGATE_TX_POLL_PERIOD="3"
