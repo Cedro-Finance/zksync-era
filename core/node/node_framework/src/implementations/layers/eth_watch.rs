@@ -10,9 +10,12 @@ use zksync_eth_watch::{ChainHttpQueryClient, EthWatch};
 use zksync_types::{ethabi::Contract, Address};
 
 use crate::{
-    implementations::resources::{
-        eth_interface::EthInterfaceResource,
-        pools::{MasterPool, PoolResource},
+    implementations::{
+        layers::logger_for_testing::Log,
+        resources::{
+            eth_interface::EthInterfaceResource,
+            pools::{MasterPool, PoolResource},
+        },
     },
     service::{ServiceContext, StopReceiver},
     task::{Task, TaskId},
@@ -86,6 +89,7 @@ impl WiringLayer for ChainWatchLayer {
             self.contracts_config.governance_addr,
             self.chain_watch_config.confirmations_for_bnb_event,
         );
+        Log::new("eth_watch.rs", "created bnb client").log();
 
         context.add_task(Box::new(ChainWatchTask {
             main_pool: main_pool.clone(),
@@ -102,6 +106,7 @@ impl WiringLayer for ChainWatchLayer {
             diamond_proxy_address: self.contracts_config.diamond_proxy_addr,
             poll_interval: self.chain_watch_config.poll_interval(BNB),
         }));
+        Log::new("eth_watch.rs", "added task to listen from the bnb chain").log();
 
         Ok(())
     }
