@@ -26,6 +26,7 @@ use zksync_core_leftovers::{
 };
 use zksync_env_config::FromEnv;
 use zksync_eth_client::clients::Client;
+use zksync_node_framework::implementations::layers::logger_for_testing::Log;
 
 use crate::node_builder::MainNodeBuilder;
 
@@ -88,6 +89,7 @@ impl FromStr for ComponentsToRun {
 }
 
 fn main() -> anyhow::Result<()> {
+    Log::new("zksync_server/src/main.rs", "started the main file").log();
     let opt = Cli::parse();
 
     // Load env config and use it if file config is not provided

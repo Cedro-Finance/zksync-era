@@ -11,7 +11,13 @@ impl<'a> Log<'a> {
         }
     }
     pub fn log(&self) {
+        for _ in 1..3 {
+            println!("**********************************************************")
+        }
         println!("file:: {} message:: {}", self.file_name, self.message);
+        for _ in 1..3 {
+            println!("**********************************************************")
+        }
     }
 }
 

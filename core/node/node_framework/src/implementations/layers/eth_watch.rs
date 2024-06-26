@@ -42,6 +42,7 @@ pub struct ChainWatchLayer {
 
 impl ChainWatchLayer {
     pub fn new(chain_watch_config: ChainWatchConfig, contracts_config: ContractsConfig) -> Self {
+        Log::new("layers/eth_watch.rs", "reached in ChainWatchLayer");
         Self {
             chain_watch_config,
             contracts_config,

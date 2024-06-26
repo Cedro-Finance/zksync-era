@@ -24,6 +24,7 @@ use zksync_node_framework::{
         house_keeper::HouseKeeperLayer,
         l1_batch_commitment_mode_validation::L1BatchCommitmentModeValidationLayer,
         l1_gas::SequencerL1GasLayer,
+        logger_for_testing::Log,
         metadata_calculator::MetadataCalculatorLayer,
         object_store::ObjectStoreLayer,
         pk_signing_eth_client::PKSigningEthClientLayer,
@@ -230,11 +231,13 @@ impl MainNodeBuilder {
     }
 
     fn add_eth_watch_layer(mut self) -> anyhow::Result<Self> {
+        Log::new("node_builders.rs", "reached here").log();
         let eth_config = try_load_config!(self.configs.eth);
         self.node.add_layer(ChainWatchLayer::new(
             try_load_config!(eth_config.watcher),
             self.contracts_config.clone(),
         ));
+        Log::new("node_builders.rs", "reached here2").log();
         Ok(self)
     }
 
