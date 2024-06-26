@@ -411,7 +411,7 @@ fn main() -> anyhow::Result<()> {
         .add_house_keeper_layer()?
         .add_commitment_generator_layer()?
         .add_contract_verification_api_layer()?
-        .build()?
+        .build()? // sw: builds here then runs the tasks
         .run()?;
 
     Ok(())
