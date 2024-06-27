@@ -46,7 +46,7 @@ impl EventProcessor for PriorityOpsEventProcessor {
         for event in events {
             let hash = match event.transaction_hash {
                 None => H256::zero(),
-                Some(x) => x
+                Some(x) => x,
             };
             TestLogger::new(
                 FILE_NAME,
