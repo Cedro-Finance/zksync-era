@@ -37,6 +37,8 @@ struct EthWatchState {
     last_processed_ethereum_block: u64,
 }
 
+static FILE_NAME: &str = "node/eth_watch/src/lib.rs";
+
 /// Ethereum watcher component.
 #[derive(Debug)]
 pub struct EthWatch {
@@ -173,11 +175,7 @@ impl EthWatch {
         if to_block <= self.last_processed_ethereum_block {
             return Ok(());
         }
-        Log::new(
-            "node/eth_watch/src/lib.rs",
-            format!("getting events for chain {}", self.name.as_str()).as_str(),
-        )
-        .log();
+
         let events = self
             .client
             .get_events(

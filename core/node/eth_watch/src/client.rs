@@ -29,6 +29,8 @@ pub trait EthClient: 'static + fmt::Debug + Send + Sync {
         -> Result<H256, ContractCallError>;
     /// Sets list of topics to return events for.
     fn set_topics(&mut self, topics: Vec<H256>);
+    /// Gets name of the client
+    fn name(&self) -> String;
 }
 
 pub const RETRY_LIMIT: usize = 5;
@@ -74,10 +76,6 @@ impl ChainHttpQueryClient {
             verifier_contract_abi: verifier_contract(),
             confirmations_for_eth_event,
         }
-    }
-
-    pub fn name(&self) -> String {
-        self.name.clone()
     }
 
     async fn get_filter_logs(
@@ -219,5 +217,9 @@ impl EthClient for ChainHttpQueryClient {
 
     fn set_topics(&mut self, topics: Vec<H256>) {
         self.topics = topics;
+    }
+
+    fn name(&self) -> String {
+        self.name.clone()
     }
 }

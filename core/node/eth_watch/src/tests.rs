@@ -125,6 +125,10 @@ impl EthClient for MockEthClient {
 
     fn set_topics(&mut self, _topics: Vec<Hash>) {}
 
+    fn name(&self) -> String {
+        String::from("hello")
+    }
+
     async fn scheduler_vk_hash(
         &self,
         _verifier_address: Address,
