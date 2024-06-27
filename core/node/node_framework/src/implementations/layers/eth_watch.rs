@@ -93,6 +93,7 @@ impl WiringLayer for ChainWatchLayer {
         Log::new("eth_watch.rs", "created bnb client").log();
 
         context.add_task(Box::new(ChainWatchTask {
+            name: String::from("ethereum"),
             main_pool: main_pool.clone(),
             client: eth_client,
             governance_contract: governance_contract(),
@@ -101,6 +102,7 @@ impl WiringLayer for ChainWatchLayer {
         }));
 
         context.add_task(Box::new(ChainWatchTask {
+            name: String::from("binance"),
             main_pool: main_pool.clone(),
             client: bnb_client,
             governance_contract: governance_contract(),
@@ -116,6 +118,7 @@ impl WiringLayer for ChainWatchLayer {
 #[derive(Debug)]
 struct ChainWatchTask {
     // sw: renamed from EthWatchTask to chain watch task
+    name: String,
     main_pool: ConnectionPool<Core>,
     client: ChainHttpQueryClient, // sw: should change the name of this aswell
     governance_contract: Contract,
@@ -126,11 +129,20 @@ struct ChainWatchTask {
 #[async_trait::async_trait]
 impl Task for ChainWatchTask {
     fn id(&self) -> TaskId {
-        "chain_watch".into() // sw: changed the name of the task
+        let mut id = String::from("chain_watch_");
+        id = id + self.name.as_str();
+        id.as_str().into() // sw: changed the name of the task
     }
 
     async fn run(self: Box<Self>, stop_receiver: StopReceiver) -> anyhow::Result<()> {
+        Log::new(
+            "layers/eth_watch.rs",
+            format!("running the eth watcher {}", self.id().to_string().as_str()).as_str(),
+        )
+        .log();
+
         let eth_watch = EthWatch::new(
+            self.name,
             self.diamond_proxy_address,
             &self.governance_contract,
             Box::new(self.client),
