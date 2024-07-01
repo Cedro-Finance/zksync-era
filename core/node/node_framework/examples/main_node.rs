@@ -179,9 +179,15 @@ impl MainNodeBuilder {
             .add_layer(state_keeper_layer);
         Ok(self)
     }
-
+    // sw: should add the task here
     fn add_eth_watch_layer(mut self) -> anyhow::Result<Self> {
         self.node.add_layer(ChainWatchLayer::new(
+            String::from("ethereum"),
+            ChainWatchConfig::from_env()?,
+            ContractsConfig::from_env()?,
+        ));
+        self.node.add_layer(ChainWatchLayer::new(
+            String::from("binance"),
             ChainWatchConfig::from_env()?,
             ContractsConfig::from_env()?,
         ));

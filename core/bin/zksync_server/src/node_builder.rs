@@ -65,7 +65,8 @@ pub struct MainNodeBuilder {
     configs: GeneralConfig,
     wallets: Wallets,
     genesis_config: GenesisConfig,
-    contracts_config: ContractsConfig,
+    eth_contracts_config: ContractsConfig,
+    bnb_contracts_config: ContractsConfig,
     secrets: Secrets,
     consensus_config: Option<ConsensusConfig>,
 }
@@ -75,7 +76,8 @@ impl MainNodeBuilder {
         configs: GeneralConfig,
         wallets: Wallets,
         genesis_config: GenesisConfig,
-        contracts_config: ContractsConfig,
+        eth_contracts_config: ContractsConfig,
+        bnb_contracts_config: ContractsConfig,
         secrets: Secrets,
         consensus_config: Option<ConsensusConfig>,
     ) -> Self {
@@ -84,7 +86,8 @@ impl MainNodeBuilder {
             configs,
             wallets,
             genesis_config,
-            contracts_config,
+            eth_contracts_config,
+            bnb_contracts_config,
             secrets,
             consensus_config,
         }
@@ -124,7 +127,7 @@ impl MainNodeBuilder {
         let wallets = try_load_config!(self.wallets.eth_sender);
         self.node.add_layer(PKSigningEthClientLayer::new(
             eth_config,
-            self.contracts_config.clone(),
+            self.eth_contracts_config.clone(),
             self.genesis_config.l1_chain_id,
             wallets,
         ));
@@ -165,7 +168,7 @@ impl MainNodeBuilder {
 
     fn add_l1_batch_commitment_mode_validation_layer(mut self) -> anyhow::Result<Self> {
         let layer = L1BatchCommitmentModeValidationLayer::new(
-            self.contracts_config.diamond_proxy_addr,
+            self.eth_contracts_config.diamond_proxy_addr,
             self.genesis_config.l1_batch_commit_data_generator_mode,
         );
         self.node.add_layer(layer);
@@ -198,7 +201,7 @@ impl MainNodeBuilder {
         let wallets = self.wallets.clone();
         let sk_config = try_load_config!(self.configs.state_keeper_config);
         let persistence_layer = OutputHandlerLayer::new(
-            self.contracts_config
+            self.eth_contracts_config
                 .l2_shared_bridge_addr
                 .context("L2 shared bridge address")?,
             sk_config.l2_block_seal_queue_capacity,
@@ -234,9 +237,17 @@ impl MainNodeBuilder {
         Log::new("node_builders.rs", "reached here").log();
         let eth_config = try_load_config!(self.configs.eth);
         self.node.add_layer(ChainWatchLayer::new(
+            String::from("eth_client"),
             try_load_config!(eth_config.watcher),
-            self.contracts_config.clone(),
+            self.eth_contracts_config.clone(),
         ));
+
+        self.node.add_layer(ChainWatchLayer::new(
+            String::from("bnb_client"),
+            try_load_config!(eth_config.watcher),
+            self.bnb_contracts_config.clone(),
+        ));
+
         Log::new("node_builders.rs", "reached here2").log();
         Ok(self)
     }
@@ -319,7 +330,11 @@ impl MainNodeBuilder {
         };
         self.node.add_layer(Web3ServerLayer::http(
             rpc_config.http_port,
-            InternalApiConfig::new(&rpc_config, &self.contracts_config, &self.genesis_config),
+            InternalApiConfig::new(
+                &rpc_config,
+                &self.eth_contracts_config,
+                &self.genesis_config,
+            ),
             optional_config,
         ));
 
@@ -352,7 +367,11 @@ impl MainNodeBuilder {
         };
         self.node.add_layer(Web3ServerLayer::ws(
             rpc_config.ws_port,
-            InternalApiConfig::new(&rpc_config, &self.contracts_config, &self.genesis_config),
+            InternalApiConfig::new(
+                &rpc_config,
+                &self.eth_contracts_config,
+                &self.genesis_config,
+            ),
             optional_config,
         ));
 
@@ -373,7 +392,7 @@ impl MainNodeBuilder {
 
         self.node.add_layer(EthTxAggregatorLayer::new(
             eth_sender_config,
-            self.contracts_config.clone(),
+            self.eth_contracts_config.clone(),
             self.genesis_config.l2_chain_id,
             self.genesis_config.l1_batch_commit_data_generator_mode,
         ));

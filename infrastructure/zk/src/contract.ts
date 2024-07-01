@@ -21,6 +21,13 @@ export async function verifyL1Contracts(): Promise<void> {
 export function updateContractsEnv(initEnv: string, deployLog: String, envVars: Array<string>): string {
     let updatedContracts = '';
     for (const envVar of envVars) {
+        console.log('*************************************');
+        console.log('*************************************');
+        console.log('*************************************');
+        console.log('reached here');
+        console.log('*************************************');
+        console.log('*************************************');
+        console.log('*************************************');
         const pattern = new RegExp(`${envVar}=.*`, 'g');
         const matches = deployLog.match(pattern);
         if (matches !== null) {

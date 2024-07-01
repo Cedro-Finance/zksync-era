@@ -24,7 +24,10 @@ use zksync_core_leftovers::{
     temp_config_store::{decode_yaml_repr, TempConfigStore},
     Component, Components,
 };
-use zksync_env_config::FromEnv;
+use zksync_env_config::{
+    Chains::{BNB, ETH},
+    DummyTrait, FromEnv,
+};
 use zksync_eth_client::clients::Client;
 use zksync_node_framework::implementations::layers::logger_for_testing::Log;
 
@@ -160,9 +163,19 @@ fn main() -> anyhow::Result<()> {
     };
 
     let consensus = config::read_consensus_config().context("read_consensus_config()")?;
+    // sw: make two contracts config one for eth and another for bnb
+    let eth_contracts_config = match opt.contracts_config_path.clone() {
+        None => ContractsConfig::for_chains(ETH).context("contracts_config")?,
+        Some(path) => {
+            let yaml =
+                std::fs::read_to_string(&path).with_context(|| path.display().to_string())?;
+            decode_yaml_repr::<zksync_protobuf_config::proto::contracts::Contracts>(&yaml)
+                .context("failed decoding contracts YAML config")?
+        }
+    };
 
-    let contracts_config = match opt.contracts_config_path {
-        None => ContractsConfig::from_env().context("contracts_config")?,
+    let bnb_contracts_config = match opt.contracts_config_path.clone() {
+        None => ContractsConfig::for_chains(BNB).context("contracts_config")?,
         Some(path) => {
             let yaml =
                 std::fs::read_to_string(&path).with_context(|| path.display().to_string())?;
@@ -181,7 +194,13 @@ fn main() -> anyhow::Result<()> {
         }
     };
 
-    run_genesis_if_needed(opt.genesis, &genesis, &contracts_config, &secrets)?;
+    run_genesis_if_needed(
+        opt.genesis,
+        &genesis,
+        &eth_contracts_config,
+        &bnb_contracts_config,
+        &secrets,
+    )?;
     if opt.genesis {
         // If genesis is requested, we don't need to run the node.
         return Ok(());
@@ -197,7 +216,8 @@ fn main() -> anyhow::Result<()> {
         configs,
         wallets,
         genesis,
-        contracts_config,
+        eth_contracts_config,
+        bnb_contracts_config,
         secrets,
         consensus,
     )
@@ -209,7 +229,8 @@ fn main() -> anyhow::Result<()> {
 fn run_genesis_if_needed(
     force_genesis: bool,
     genesis: &GenesisConfig,
-    contracts_config: &ContractsConfig,
+    eth_contracts_config: &ContractsConfig,
+    bnb_contracts_config: &ContractsConfig,
     secrets: &Secrets,
 ) -> anyhow::Result<()> {
     let tokio_runtime = tokio::runtime::Builder::new_multi_thread()
@@ -222,7 +243,7 @@ fn run_genesis_if_needed(
                 .await
                 .context("genesis_init")?;
 
-            if let Some(ecosystem_contracts) = &contracts_config.ecosystem_contracts {
+            if let Some(ecosystem_contracts) = &eth_contracts_config.ecosystem_contracts {
                 let l1_secrets = secrets.l1.as_ref().context("l1_screts")?;
                 let query_client = Client::http(l1_secrets.l1_rpc_url.clone())
                     .context("Ethereum client")?
@@ -230,7 +251,23 @@ fn run_genesis_if_needed(
                     .build();
                 zksync_node_genesis::save_set_chain_id_tx(
                     &query_client,
-                    contracts_config.diamond_proxy_addr,
+                    eth_contracts_config.diamond_proxy_addr,
+                    ecosystem_contracts.state_transition_proxy_addr,
+                    &database_secrets,
+                )
+                .await
+                .context("Failed to save SetChainId upgrade transaction")?;
+            }
+
+            if let Some(ecosystem_contracts) = &bnb_contracts_config.ecosystem_contracts {
+                let l1_secrets = secrets.l1.as_ref().context("l1_screts")?;
+                let query_client = Client::http(l1_secrets.l1_rpc_url.clone())
+                    .context("BNB client")?
+                    .for_network(genesis.l1_chain_id.into())
+                    .build();
+                zksync_node_genesis::save_set_chain_id_tx(
+                    &query_client,
+                    bnb_contracts_config.diamond_proxy_addr,
                     ecosystem_contracts.state_transition_proxy_addr,
                     &database_secrets,
                 )

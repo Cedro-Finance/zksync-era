@@ -31,6 +31,14 @@ pub trait FromEnv: Sized {
     fn from_env() -> anyhow::Result<Self>;
 }
 
+pub enum Chains {
+    ETH,
+    BNB,
+}
+pub trait DummyTrait: Sized {
+    fn for_chains(chain: Chains) -> anyhow::Result<Self>;
+}
+
 /// Convenience function that loads the structure from the environment variable given the prefix.
 /// Panics if the config cannot be loaded from the environment variables.
 pub fn envy_load<T: DeserializeOwned>(name: &str, prefix: &str) -> anyhow::Result<T> {

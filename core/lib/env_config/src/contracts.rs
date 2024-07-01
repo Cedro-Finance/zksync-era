@@ -1,6 +1,6 @@
 use zksync_config::{configs::EcosystemContracts, ContractsConfig};
 
-use crate::{envy_load, FromEnv};
+use crate::{envy_load, Chains, DummyTrait, FromEnv};
 
 impl FromEnv for EcosystemContracts {
     fn from_env() -> anyhow::Result<Self> {
@@ -11,6 +11,41 @@ impl FromEnv for EcosystemContracts {
             transparent_proxy_admin_addr: std::env::var("CONTRACTS_TRANSPARENT_PROXY_ADMIN_ADDR")?
                 .parse()?,
         })
+    }
+}
+
+impl DummyTrait for EcosystemContracts {
+    fn for_chains(chain: Chains) -> anyhow::Result<Self> {
+        match chain {
+            Chains::ETH => {
+                return Ok(Self {
+                    bridgehub_proxy_addr: std::env::var("CONTRACTS_ETH_BRIDGEHUB_PROXY_ADDR")?
+                        .parse()?,
+                    state_transition_proxy_addr: std::env::var(
+                        "CONTRACTS_ETH_STATE_TRANSITION_PROXY_ADDR",
+                    )?
+                    .parse()?,
+                    transparent_proxy_admin_addr: std::env::var(
+                        "CONTRACTS_ETH_TRANSPARENT_PROXY_ADMIN_ADDR",
+                    )?
+                    .parse()?,
+                });
+            }
+            Chains::BNB => {
+                return Ok(Self {
+                    bridgehub_proxy_addr: std::env::var("CONTRACTS_BNB_ETH_BRIDGEHUB_PROXY_ADDR")?
+                        .parse()?,
+                    state_transition_proxy_addr: std::env::var(
+                        "CONTRACTS_BNB_ETH_STATE_TRANSITION_PROXY_ADDR",
+                    )?
+                    .parse()?,
+                    transparent_proxy_admin_addr: std::env::var(
+                        "CONTRACTS_BNB_TRANSPARENT_PROXY_ADMIN_ADDR",
+                    )?
+                    .parse()?,
+                });
+            }
+        }
     }
 }
 
@@ -36,6 +71,35 @@ impl FromEnv for ContractsConfig {
             }
         }
         contracts.ecosystem_contracts = EcosystemContracts::from_env().ok();
+        Ok(contracts)
+    }
+}
+
+impl DummyTrait for ContractsConfig {
+    fn for_chains(chain: Chains) -> anyhow::Result<Self> {
+        let mut contracts: ContractsConfig = match chain {
+            Chains::BNB => envy_load("contracts", "CONTRACTS_BNB_").unwrap(),
+            Chains::ETH => envy_load("contracts", "CONTRACTS_ETH_").unwrap(),
+        };
+        // Note: we are renaming the bridge, the address remains the same
+        // These two config variables should always have the same value.
+        // TODO(EVM-578): double check and potentially forbid both of them being `None`.
+        contracts.l2_erc20_bridge_addr = contracts
+            .l2_erc20_bridge_addr
+            .or(contracts.l2_shared_bridge_addr);
+        contracts.l2_shared_bridge_addr = contracts
+            .l2_shared_bridge_addr
+            .or(contracts.l2_erc20_bridge_addr);
+
+        if let (Some(legacy_addr), Some(shared_addr)) = (
+            contracts.l2_erc20_bridge_addr,
+            contracts.l2_shared_bridge_addr,
+        ) {
+            if legacy_addr != shared_addr {
+                panic!("L2 erc20 bridge address and L2 shared bridge address are different.");
+            }
+        }
+        contracts.ecosystem_contracts = EcosystemContracts::for_chains(chain).ok();
         Ok(contracts)
     }
 }
@@ -99,6 +163,62 @@ CONTRACTS_BASE_TOKEN_ADDR="0x0000000000000000000000000000000000000001"
         lock.set_env(config);
 
         let actual = ContractsConfig::from_env().unwrap();
+        assert_eq!(actual, expected_config());
+    }
+
+    #[test]
+    fn for_chain_bnb() {
+        let mut lock = MUTEX.lock();
+        let config = r#"
+CONTRACTS_BNB_GOVERNANCE_ADDR="0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+CONTRACTS_BNB_VERIFIER_ADDR="0x34782eE00206EAB6478F2692caa800e4A581687b"
+CONTRACTS_BNB_DEFAULT_UPGRADE_ADDR="0x5e6d086f5ec079adff4fb3774cdf3e8d6a34f7e9"
+CONTRACTS_BNB_DIAMOND_PROXY_ADDR="0xF00B988a98Ca742e7958DeF9F7823b5908715f4a"
+CONTRACTS_BNB_VALIDATOR_TIMELOCK_ADDR="0xF00B988a98Ca742e7958DeF9F7823b5908715f4a"
+CONTRACTS_BNB_L1_ERC20_BRIDGE_PROXY_ADDR="0x8656770FA78c830456B00B4fFCeE6b1De0e1b888"
+CONTRACTS_BNB_L2_ERC20_BRIDGE_ADDR="0x8656770FA78c830456B00B4fFCeE6b1De0e1b888"
+CONTRACTS_BNB_L1_WETH_BRIDGE_PROXY_ADDR="0x8656770FA78c830456B00B4fFCeE6b1De0e1b888"
+CONTRACTS_BNB_L2_WETH_BRIDGE_ADDR="0x8656770FA78c830456B00B4fFCeE6b1De0e1b888"
+CONTRACTS_BNB_L2_TESTNET_PAYMASTER_ADDR="FC073319977e314F251EAE6ae6bE76B0B3BAeeCF"
+CONTRACTS_BNB_L1_MULTICALL3_ADDR="0xcA11bde05977b3631167028862bE2a173976CA11"
+CONTRACTS_BNB_L1_SHARED_BRIDGE_PROXY_ADDR="0x8656770FA78c830456B00B4fFCeE6b1De0e1b888"
+CONTRACTS_BNB_L2_SHARED_BRIDGE_ADDR="0x8656770FA78c830456B00B4fFCeE6b1De0e1b888"
+CONTRACTS_BNB_BRIDGEHUB_PROXY_ADDR="0x35ea7f92f4c5f433efe15284e99c040110cf6297"
+CONTRACTS_BNB_STATE_TRANSITION_PROXY_ADDR="0xd90f1c081c6117241624e97cb6147257c3cb2097"
+CONTRACTS_BNB_TRANSPARENT_PROXY_ADMIN_ADDR="0xdd6fa5c14e7550b4caf2aa2818d24c69cbc347e5"
+CONTRACTS_BNB_BASE_TOKEN_ADDR="0x0000000000000000000000000000000000000001"
+        "#;
+        lock.set_env(config);
+
+        let actual = ContractsConfig::for_chains(Chains::BNB).unwrap();
+        assert_eq!(actual, expected_config());
+    }
+
+    #[test]
+    fn for_chain_eth() {
+        let mut lock = MUTEX.lock();
+        let config = r#"
+CONTRACTS_ETH_GOVERNANCE_ADDR="0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+CONTRACTS_ETH_VERIFIER_ADDR="0x34782eE00206EAB6478F2692caa800e4A581687b"
+CONTRACTS_ETH_DEFAULT_UPGRADE_ADDR="0x5e6d086f5ec079adff4fb3774cdf3e8d6a34f7e9"
+CONTRACTS_ETH_DIAMOND_PROXY_ADDR="0xF00B988a98Ca742e7958DeF9F7823b5908715f4a"
+CONTRACTS_ETH_VALIDATOR_TIMELOCK_ADDR="0xF00B988a98Ca742e7958DeF9F7823b5908715f4a"
+CONTRACTS_ETH_L1_ERC20_BRIDGE_PROXY_ADDR="0x8656770FA78c830456B00B4fFCeE6b1De0e1b888"
+CONTRACTS_ETH_L2_ERC20_BRIDGE_ADDR="0x8656770FA78c830456B00B4fFCeE6b1De0e1b888"
+CONTRACTS_ETH_L1_WETH_BRIDGE_PROXY_ADDR="0x8656770FA78c830456B00B4fFCeE6b1De0e1b888"
+CONTRACTS_ETH_L2_WETH_BRIDGE_ADDR="0x8656770FA78c830456B00B4fFCeE6b1De0e1b888"
+CONTRACTS_ETH_L2_TESTNET_PAYMASTER_ADDR="FC073319977e314F251EAE6ae6bE76B0B3BAeeCF"
+CONTRACTS_ETH_L1_MULTICALL3_ADDR="0xcA11bde05977b3631167028862bE2a173976CA11"
+CONTRACTS_ETH_L1_SHARED_BRIDGE_PROXY_ADDR="0x8656770FA78c830456B00B4fFCeE6b1De0e1b888"
+CONTRACTS_ETH_L2_SHARED_BRIDGE_ADDR="0x8656770FA78c830456B00B4fFCeE6b1De0e1b888"
+CONTRACTS_ETH_BRIDGEHUB_PROXY_ADDR="0x35ea7f92f4c5f433efe15284e99c040110cf6297"
+CONTRACTS_ETH_STATE_TRANSITION_PROXY_ADDR="0xd90f1c081c6117241624e97cb6147257c3cb2097"
+CONTRACTS_ETH_TRANSPARENT_PROXY_ADMIN_ADDR="0xdd6fa5c14e7550b4caf2aa2818d24c69cbc347e5"
+CONTRACTS_ETH_BASE_TOKEN_ADDR="0x0000000000000000000000000000000000000001"
+        "#;
+        lock.set_env(config);
+
+        let actual = ContractsConfig::for_chains(Chains::ETH).unwrap();
         assert_eq!(actual, expected_config());
     }
 }

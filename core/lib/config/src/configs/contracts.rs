@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize};
 // Workspace uses
 use zksync_basic_types::Address;
 
+use super::eth_watch::Chains;
+
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct EcosystemContracts {
     pub bridgehub_proxy_addr: Address,
