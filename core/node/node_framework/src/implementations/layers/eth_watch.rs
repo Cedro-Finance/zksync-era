@@ -28,11 +28,13 @@ use crate::{
 /// such as priority operations (aka L1 transactions), protocol upgrades etc.
 ///
 /// ## Requests resources
-/// - [`PoolResource`] for [`MasterPool`]
-/// - [`EthInterfaceResource`]
+///
+/// - `PoolResource<MasterPool>`
+/// - `EthInterfaceResource`
 ///
 /// ## Adds tasks
-/// - [`EthWatchTask`] (as [`Task`])
+///
+/// - `EthWatchTask`
 #[derive(Debug)]
 pub struct ChainWatchLayer {
     // sw: changed the name from EthWatchLayer to ChainWatchLayer
