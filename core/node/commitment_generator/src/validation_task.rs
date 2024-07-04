@@ -5,6 +5,7 @@ use zksync_eth_client::{
     clients::{DynClient, L1},
     CallFunctionArgs, ClientError, ContractCallError,
 };
+use zksync_test_logger::Log;
 use zksync_types::{commitment::L1BatchCommitmentMode, Address};
 
 /// Managed task that asynchronously validates that the commitment mode (rollup or validium) from the node config
@@ -47,6 +48,23 @@ impl L1BatchCommitmentModeValidationTask {
         let expected_mode = self.expected_mode;
         let diamond_proxy_address = self.diamond_proxy_address;
         let eth_client = self.eth_client.as_ref();
+
+        Log::new(
+            "validation_task.rs",
+            format!("this is eth client and should not be nil {:?}", eth_client).as_str(),
+        )
+        .log();
+
+        Log::new(
+            "validation_task.rs",
+            format!(
+                "diamond proxy addr:: {}, expected_mode:: {:?}",
+                diamond_proxy_address.to_string().as_str(),
+                expected_mode
+            )
+            .as_str(),
+        )
+        .log();
         loop {
             let result = Self::get_pubdata_pricing_mode(diamond_proxy_address, eth_client).await;
             match result {
@@ -106,6 +124,11 @@ impl L1BatchCommitmentModeValidationTask {
     /// or when a stop signal is received.
     pub async fn run(self, mut stop_receiver: watch::Receiver<bool>) -> anyhow::Result<()> {
         let exit_on_success = self.exit_on_success;
+        Log::new(
+            "commitment_generator/src/validation_task.rs",
+            "reached in run method from where the validation is run",
+        )
+        .log();
         let validation = self.validate_commitment_mode();
         tokio::select! {
             result = validation => {

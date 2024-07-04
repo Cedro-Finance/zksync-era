@@ -1,6 +1,7 @@
 use zksync_commitment_generator::validation_task::L1BatchCommitmentModeValidationTask;
 use zksync_types::{commitment::L1BatchCommitmentMode, Address};
 
+use super::logger_for_testing::Log;
 use crate::{
     implementations::resources::eth_interface::EthInterfaceResource,
     service::{ServiceContext, StopReceiver},
@@ -44,6 +45,16 @@ impl WiringLayer for L1BatchCommitmentModeValidationLayer {
 
     async fn wire(self: Box<Self>, mut context: ServiceContext<'_>) -> Result<(), WiringError> {
         let EthInterfaceResource(query_client) = context.get_resource().await?;
+        Log::new(
+            "node_framework/src/implementations",
+            format!("query client shouldnot be nil {:?}", query_client).as_str(),
+        )
+        .log();
+        Log::new(
+            "node_framework/src/implementations",
+            "this is where the new task for l1 batch is formed",
+        )
+        .log();
         let task = L1BatchCommitmentModeValidationTask::new(
             self.diamond_proxy_addr,
             self.l1_batch_commit_data_generator_mode,
@@ -67,6 +78,10 @@ impl Task for L1BatchCommitmentModeValidationTask {
     }
 
     async fn run(self: Box<Self>, stop_receiver: StopReceiver) -> anyhow::Result<()> {
+        Log::new(
+            "nodeframework/src/l1_batch_commitment_mode_validation",
+            "this is where the validation function gets triggered",
+        );
         (*self).exit_on_success().run(stop_receiver.0).await
     }
 }

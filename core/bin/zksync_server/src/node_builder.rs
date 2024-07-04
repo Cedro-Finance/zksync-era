@@ -167,11 +167,22 @@ impl MainNodeBuilder {
     }
 
     fn add_l1_batch_commitment_mode_validation_layer(mut self) -> anyhow::Result<Self> {
+        Log::new(
+            "zksync_server/src/node_builder.rs",
+            "has reached here and has it failed??",
+        )
+        .log();
         let layer = L1BatchCommitmentModeValidationLayer::new(
             self.eth_contracts_config.diamond_proxy_addr,
             self.genesis_config.l1_batch_commit_data_generator_mode,
         );
         self.node.add_layer(layer);
+        Log::new(
+            "zksync_server/src/node_builder.rs",
+            "has the layer been added or is it an error?",
+        )
+        .log();
+
         Ok(self)
     }
 

@@ -47,6 +47,7 @@ use zksync_state_keeper::{
     StateKeeperPersistence, TreeWritesPersistence, ZkSyncStateKeeper,
 };
 use zksync_storage::RocksDB;
+use zksync_test_logger::Log;
 use zksync_types::L2ChainId;
 use zksync_utils::wait_for_tasks::ManagedTasks;
 use zksync_web3_decl::{
@@ -345,6 +346,11 @@ async fn run_core(
         config.optional.l1_batch_commit_data_generator_mode,
         eth_client.clone(),
     );
+    Log::new(
+        "external_node/src/main.rs",
+        "is this from where the run method is called for validation task?",
+    )
+    .log();
     task_handles.push(tokio::spawn(validation_task.run(stop_receiver.clone())));
 
     let consistency_checker = ConsistencyChecker::new(
@@ -782,6 +788,10 @@ impl FromStr for ComponentsToRun {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    Log::new(
+        "external_node/src/main.rs",
+        "this is the start of async main of tokio",
+    );
     // Initial setup.
     let opt = Cli::parse();
 
@@ -819,6 +829,7 @@ async fn main() -> anyhow::Result<()> {
         .for_network(config.required.l1_chain_id.into())
         .build();
     let eth_client = Box::new(eth_client);
+    // sw: should add bnb client here
 
     let config = config
         .fetch_remote(main_node_client.as_ref())

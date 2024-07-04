@@ -21,6 +21,7 @@ zksync_protobuf_config.workspace = true
 zksync_state.workspace = true
 zksync_object_store.workspace = true
 zksync_storage.workspace = true
+zksync_test_logger.workspace = true
 zksync_eth_client.workspace = true
 zksync_contracts.workspace = true
 zksync_web3_decl.workspace = true
