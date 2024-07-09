@@ -2,7 +2,6 @@
 //! as well as an interface to run the node with the specified components.
 
 use anyhow::Context;
-use prometheus_exporter::PrometheusExporterConfig;
 use zksync_config::{
     configs::{consensus::ConsensusConfig, wallets::Wallets, GeneralConfig, Secrets},
     ContractsConfig, GenesisConfig,
@@ -20,11 +19,12 @@ use zksync_node_framework::{
         consensus::{ConsensusLayer, Mode as ConsensusMode},
         contract_verification_api::ContractVerificationApiLayer,
         eth_sender::{EthTxAggregatorLayer, EthTxManagerLayer},
-        eth_watch::EthWatchLayer,
+        eth_watch::ChainWatchLayer,
         healtcheck_server::HealthCheckLayer,
         house_keeper::HouseKeeperLayer,
         l1_batch_commitment_mode_validation::L1BatchCommitmentModeValidationLayer,
         l1_gas::SequencerL1GasLayer,
+        logger_for_testing::Log,
         metadata_calculator::MetadataCalculatorLayer,
         object_store::ObjectStoreLayer,
         pk_signing_eth_client::PKSigningEthClientLayer,
@@ -50,6 +50,7 @@ use zksync_node_framework::{
     },
     service::{ZkStackService, ZkStackServiceBuilder},
 };
+use zksync_prometheus_exporter::PrometheusExporterConfig;
 
 /// Macro that looks into a path to fetch an optional config,
 /// and clones it into a variable.
@@ -65,6 +66,7 @@ pub struct MainNodeBuilder {
     wallets: Wallets,
     genesis_config: GenesisConfig,
     contracts_config: ContractsConfig,
+    bnb_contracts_config: ContractsConfig,
     secrets: Secrets,
     consensus_config: Option<ConsensusConfig>,
 }
@@ -75,6 +77,7 @@ impl MainNodeBuilder {
         wallets: Wallets,
         genesis_config: GenesisConfig,
         contracts_config: ContractsConfig,
+        bnb_contracts_config: ContractsConfig,
         secrets: Secrets,
         consensus_config: Option<ConsensusConfig>,
     ) -> Self {
@@ -84,6 +87,7 @@ impl MainNodeBuilder {
             wallets,
             genesis_config,
             contracts_config,
+            bnb_contracts_config,
             secrets,
             consensus_config,
         }
@@ -175,9 +179,11 @@ impl MainNodeBuilder {
         let merkle_tree_env_config = try_load_config!(self.configs.db_config).merkle_tree;
         let operations_manager_env_config =
             try_load_config!(self.configs.operations_manager_config);
+        let state_keeper_env_config = try_load_config!(self.configs.state_keeper_config);
         let metadata_calculator_config = MetadataCalculatorConfig::for_main_node(
             &merkle_tree_env_config,
             &operations_manager_env_config,
+            &state_keeper_env_config,
         );
         let mut layer = MetadataCalculatorLayer::new(metadata_calculator_config);
         if with_tree_api {
@@ -199,7 +205,8 @@ impl MainNodeBuilder {
                 .l2_shared_bridge_addr
                 .context("L2 shared bridge address")?,
             sk_config.l2_block_seal_queue_capacity,
-        );
+        )
+        .with_protective_reads_persistence_enabled(sk_config.protective_reads_persistence_enabled);
         let mempool_io_layer = MempoolIOLayer::new(
             self.genesis_config.l2_chain_id,
             sk_config.clone(),
@@ -227,11 +234,14 @@ impl MainNodeBuilder {
     }
 
     fn add_eth_watch_layer(mut self) -> anyhow::Result<Self> {
+        Log::new("node_builders.rs", "reached here").log();
         let eth_config = try_load_config!(self.configs.eth);
-        self.node.add_layer(EthWatchLayer::new(
+        self.node.add_layer(ChainWatchLayer::new(
             try_load_config!(eth_config.watcher),
             self.contracts_config.clone(),
+            self.bnb_contracts_config.clone(),
         ));
+        Log::new("node_builders.rs", "reached here2").log();
         Ok(self)
     }
 

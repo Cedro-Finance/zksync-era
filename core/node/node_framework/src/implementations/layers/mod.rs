@@ -10,6 +10,7 @@ pub mod healtcheck_server;
 pub mod house_keeper;
 pub mod l1_batch_commitment_mode_validation;
 pub mod l1_gas;
+pub mod logger_for_testing;
 pub mod main_node_client;
 pub mod main_node_fee_params_fetcher;
 pub mod metadata_calculator;

@@ -125,6 +125,10 @@ impl EthClient for MockEthClient {
 
     fn set_topics(&mut self, _topics: Vec<Hash>) {}
 
+    fn name(&self) -> String {
+        String::from("hello")
+    }
+
     async fn scheduler_vk_hash(
         &self,
         _verifier_address: Address,
@@ -199,6 +203,7 @@ fn build_upgrade_tx(id: ProtocolVersionId, eth_block: u64) -> ProtocolUpgradeTx 
 async fn create_test_watcher(connection_pool: ConnectionPool<Core>) -> (EthWatch, MockEthClient) {
     let client = MockEthClient::new();
     let watcher = EthWatch::new(
+        String::from("test_chain"),
         Address::default(),
         &governance_contract(),
         Box::new(client.clone()),
@@ -291,6 +296,7 @@ async fn test_normal_operation_governance_upgrades() {
 
     let mut client = MockEthClient::new();
     let mut watcher = EthWatch::new(
+        String::from("test_chain"),
         Address::default(),
         &governance_contract(),
         Box::new(client.clone()),

@@ -8,12 +8,13 @@ use anyhow::Context as _;
 use tokio::sync::watch;
 use zksync_dal::{Connection, ConnectionPool, Core, CoreDal};
 use zksync_system_constants::PRIORITY_EXPIRATION;
+use zksync_test_logger::Log;
 use zksync_types::{
     ethabi::Contract, protocol_version::ProtocolSemanticVersion,
     web3::BlockNumber as Web3BlockNumber, Address, PriorityOpId,
 };
 
-pub use self::client::EthHttpQueryClient;
+pub use self::client::ChainHttpQueryClient;
 use self::{
     client::{EthClient, RETRY_LIMIT},
     event_processors::{
@@ -36,9 +37,12 @@ struct EthWatchState {
     last_processed_ethereum_block: u64,
 }
 
+static FILE_NAME: &str = "node/eth_watch/src/lib.rs";
+
 /// Ethereum watcher component.
 #[derive(Debug)]
 pub struct EthWatch {
+    name: String,
     client: Box<dyn EthClient>,
     poll_interval: Duration,
     event_processors: Vec<Box<dyn EventProcessor>>,
@@ -48,6 +52,7 @@ pub struct EthWatch {
 
 impl EthWatch {
     pub async fn new(
+        name: String,
         diamond_proxy_addr: Address,
         governance_contract: &Contract,
         mut client: Box<dyn EthClient>,
@@ -78,6 +83,7 @@ impl EthWatch {
         client.set_topics(topics);
 
         Ok(Self {
+            name,
             client,
             poll_interval,
             event_processors,

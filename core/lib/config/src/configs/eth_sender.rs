@@ -5,7 +5,7 @@ use serde::Deserialize;
 use zksync_basic_types::H256;
 use zksync_crypto_primitives::K256PrivateKey;
 
-use crate::EthWatchConfig;
+use crate::ChainWatchConfig;
 
 /// Configuration for the Ethereum related components.
 #[derive(Debug, Deserialize, Clone, PartialEq)]
@@ -14,7 +14,7 @@ pub struct EthConfig {
     pub sender: Option<SenderConfig>,
     /// Options related to the `GasAdjuster` submodule.
     pub gas_adjuster: Option<GasAdjusterConfig>,
-    pub watcher: Option<EthWatchConfig>,
+    pub watcher: Option<ChainWatchConfig>,
 }
 
 impl EthConfig {
@@ -55,9 +55,11 @@ impl EthConfig {
                 internal_pubdata_pricing_multiplier: 1.0,
                 max_blob_base_fee: None,
             }),
-            watcher: Some(EthWatchConfig {
+            watcher: Some(ChainWatchConfig {
                 confirmations_for_eth_event: None,
                 eth_node_poll_interval: 0,
+                confirmations_for_bnb_event: None,
+                bnb_node_poll_interval: 0,
             }),
         }
     }

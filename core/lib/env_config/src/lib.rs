@@ -30,6 +30,17 @@ mod wallets;
 pub trait FromEnv: Sized {
     fn from_env() -> anyhow::Result<Self>;
 }
+pub enum Chain {
+    ETH,
+    BNB,
+}
+
+pub trait FromEnvChain
+where
+    Self: Sized,
+{
+    fn from_env_chain(chain: Chain) -> anyhow::Result<Self>;
+}
 
 /// Convenience function that loads the structure from the environment variable given the prefix.
 /// Panics if the config cannot be loaded from the environment variables.

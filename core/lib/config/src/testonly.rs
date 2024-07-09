@@ -175,6 +175,7 @@ impl Distribution<configs::chain::StateKeeperConfig> for EncodeDist {
             validation_computational_gas_limit: self.sample(rng),
             save_call_traces: self.sample(rng),
             max_circuits_per_batch: self.sample(rng),
+            protective_reads_persistence_enabled: self.sample(rng),
             // These values are not involved into files serialization skip them
             fee_account_addr: None,
             bootloader_hash: None,
@@ -393,11 +394,13 @@ impl Distribution<configs::eth_sender::GasAdjusterConfig> for EncodeDist {
     }
 }
 
-impl Distribution<configs::EthWatchConfig> for EncodeDist {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> configs::EthWatchConfig {
-        configs::EthWatchConfig {
+impl Distribution<configs::ChainWatchConfig> for EncodeDist {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> configs::ChainWatchConfig {
+        configs::ChainWatchConfig {
             confirmations_for_eth_event: self.sample(rng),
             eth_node_poll_interval: self.sample(rng),
+            confirmations_for_bnb_event: self.sample(rng),
+            bnb_node_poll_interval: self.sample(rng),
         }
     }
 }

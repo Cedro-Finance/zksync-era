@@ -5,13 +5,14 @@
 use std::fmt::Formatter;
 
 use anyhow::Context as _;
-use multivm::utils::get_max_gas_per_pubdata_byte;
 use zksync_config::{configs::DatabaseSecrets, GenesisConfig};
 use zksync_contracts::{BaseSystemContracts, BaseSystemContractsHashes, SET_CHAIN_ID_EVENT};
 use zksync_dal::{Connection, ConnectionPool, Core, CoreDal, DalError};
 use zksync_eth_client::EthInterface;
 use zksync_merkle_tree::{domain::ZkSyncTree, TreeInstruction};
+use zksync_multivm::utils::get_max_gas_per_pubdata_byte;
 use zksync_system_constants::PRIORITY_EXPIRATION;
+use zksync_test_logger::Log;
 use zksync_types::{
     block::{BlockGasCount, DeployedContract, L1BatchHeader, L2BlockHasher, L2BlockHeader},
     commitment::{CommitmentInput, L1BatchCommitment},
@@ -420,7 +421,27 @@ pub async fn save_set_chain_id_tx(
     let mut storage = pool.connection().await?;
 
     let to = query_client.block_number().await?.as_u64();
+    Log::new(
+        "genesis/src/lib.rs",
+        format!("do we have the height {}", to).as_str(),
+    )
+    .log();
     let from = to.saturating_sub(PRIORITY_EXPIRATION);
+    Log::new(
+        "genesis/src/lib.rs",
+        format!("do we have the height {}", from).as_str(),
+    )
+    .log();
+    Log::new(
+        "genesis/src/lib.rs",
+        format!(
+            "state transition manager address {} diamond proxy address {}",
+            state_transition_manager_address, diamond_proxy_address
+        )
+        .as_str(),
+    )
+    .log();
+
     let filter = FilterBuilder::default()
         .address(vec![state_transition_manager_address])
         .topics(
@@ -432,6 +453,11 @@ pub async fn save_set_chain_id_tx(
         .from_block(from.into())
         .to_block(BlockNumber::Latest)
         .build();
+    Log::new(
+        "genesis/src/lib.rs",
+        format!("do we have the filter {:?}", filter).as_str(),
+    )
+    .log();
     let mut logs = query_client.logs(&filter).await?;
     anyhow::ensure!(
         logs.len() == 1,

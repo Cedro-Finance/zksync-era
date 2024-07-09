@@ -4,6 +4,7 @@ use anyhow::Context;
 use zksync_contracts::hyperchain_contract;
 use zksync_dal::{Connection, Core, CoreDal, DalError};
 use zksync_shared_metrics::{TxStage, APP_METRICS};
+use zksync_test_logger::Log as TestLogger;
 use zksync_types::{l1::L1Tx, web3::Log, PriorityOpId, H256};
 
 use crate::{
@@ -11,6 +12,8 @@ use crate::{
     event_processors::{EventProcessor, EventProcessorError},
     metrics::{PollStage, METRICS},
 };
+
+static FILE_NAME: &str = "eth_watch/src/event_processors/priority_ops.rs";
 
 /// Responsible for saving new priority L1 transactions to the database.
 #[derive(Debug)]
@@ -41,6 +44,21 @@ impl EventProcessor for PriorityOpsEventProcessor {
     ) -> Result<(), EventProcessorError> {
         let mut priority_ops = Vec::new();
         for event in events {
+            let hash = match event.transaction_hash {
+                None => H256::zero(),
+                Some(x) => x,
+            };
+            TestLogger::new(
+                FILE_NAME,
+                format!(
+                    "chain:: {}, event:: {}, hash:: {} does event reach here?",
+                    _client.name().as_str(),
+                    event.address.to_string().as_str(),
+                    hash.to_string().as_str(),
+                )
+                .as_str(),
+            )
+            .log();
             assert_eq!(event.topics[0], self.new_priority_request_signature); // guaranteed by the watcher
             let tx = L1Tx::try_from(event)
                 .map_err(|err| EventProcessorError::log_parse(err, "priority op"))?;

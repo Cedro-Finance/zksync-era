@@ -16,7 +16,7 @@ use zksync_config::{
         L1Secrets, ObservabilityConfig, PrometheusConfig, ProofDataHandlerConfig,
         ProtectiveReadsWriterConfig, Secrets,
     },
-    ApiConfig, ContractVerifierConfig, DBConfig, EthConfig, EthWatchConfig, GasAdjusterConfig,
+    ApiConfig, ChainWatchConfig, ContractVerifierConfig, DBConfig, EthConfig, GasAdjusterConfig,
     GenesisConfig, ObjectStoreConfig, PostgresConfig, SnapshotsCreatorConfig,
 };
 use zksync_core_leftovers::{
@@ -24,8 +24,9 @@ use zksync_core_leftovers::{
     temp_config_store::{decode_yaml_repr, TempConfigStore},
     Component, Components,
 };
-use zksync_env_config::FromEnv;
+use zksync_env_config::{Chain, FromEnv, FromEnvChain};
 use zksync_eth_client::clients::Client;
+use zksync_node_framework::implementations::layers::logger_for_testing::Log;
 
 use crate::node_builder::MainNodeBuilder;
 
@@ -88,6 +89,7 @@ impl FromStr for ComponentsToRun {
 }
 
 fn main() -> anyhow::Result<()> {
+    Log::new("zksync_server/src/main.rs", "started the main file").log();
     let opt = Cli::parse();
 
     // Load env config and use it if file config is not provided
@@ -108,12 +110,12 @@ fn main() -> anyhow::Result<()> {
         .clone()
         .context("observability config")?;
 
-    let log_format: vlog::LogFormat = observability_config
+    let log_format: zksync_vlog::LogFormat = observability_config
         .log_format
         .parse()
         .context("Invalid log format")?;
 
-    let mut builder = vlog::ObservabilityBuilder::new().with_log_format(log_format);
+    let mut builder = zksync_vlog::ObservabilityBuilder::new().with_log_format(log_format);
     if let Some(log_directives) = observability_config.log_directives {
         builder = builder.with_log_directives(log_directives);
     }
@@ -159,8 +161,18 @@ fn main() -> anyhow::Result<()> {
 
     let consensus = config::read_consensus_config().context("read_consensus_config()")?;
 
-    let contracts_config = match opt.contracts_config_path {
-        None => ContractsConfig::from_env().context("contracts_config")?,
+    let contracts_config = match opt.contracts_config_path.clone() {
+        None => ContractsConfig::from_env_chain(Chain::ETH).context("contracts_config")?,
+        Some(path) => {
+            let yaml =
+                std::fs::read_to_string(&path).with_context(|| path.display().to_string())?;
+            decode_yaml_repr::<zksync_protobuf_config::proto::contracts::Contracts>(&yaml)
+                .context("failed decoding contracts YAML config")?
+        }
+    };
+
+    let bnb_contracts_config = match opt.contracts_config_path.clone() {
+        None => ContractsConfig::from_env_chain(Chain::BNB).context("contracts_config")?,
         Some(path) => {
             let yaml =
                 std::fs::read_to_string(&path).with_context(|| path.display().to_string())?;
@@ -195,7 +207,8 @@ fn main() -> anyhow::Result<()> {
         configs,
         wallets,
         genesis,
-        contracts_config,
+        contracts_config.clone(),
+        bnb_contracts_config.clone(),
         secrets,
         consensus,
     )
@@ -210,6 +223,11 @@ fn run_genesis_if_needed(
     contracts_config: &ContractsConfig,
     secrets: &Secrets,
 ) -> anyhow::Result<()> {
+    Log::new(
+        "main.rs",
+        format!("this is genesis being run {:?}", contracts_config).as_str(),
+    )
+    .log();
     let tokio_runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()?;
@@ -264,7 +282,7 @@ fn load_env_config() -> anyhow::Result<TempConfigStore> {
         api_config: ApiConfig::from_env().ok(),
         db_config: DBConfig::from_env().ok(),
         eth_sender_config: EthConfig::from_env().ok(),
-        eth_watch_config: EthWatchConfig::from_env().ok(),
+        eth_watch_config: ChainWatchConfig::from_env().ok(),
         gas_adjuster_config: GasAdjusterConfig::from_env().ok(),
         observability: ObservabilityConfig::from_env().ok(),
         snapshot_creator: SnapshotsCreatorConfig::from_env().ok(),
