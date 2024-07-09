@@ -8143,6 +8143,7 @@ dependencies = [
  "zksync_merkle_tree",
  "zksync_multivm",
  "zksync_system_constants",
+ "zksync_test_logger",
  "zksync_types",
  "zksync_utils",
 ]
@@ -8456,6 +8457,10 @@ dependencies = [
  "zksync_basic_types",
  "zksync_utils",
 ]
+
+[[package]]
+name = "zksync_test_logger"
+version = "0.1.0"
 
 [[package]]
 name = "zksync_types"

@@ -24,7 +24,8 @@ use zksync_core_leftovers::{
     temp_config_store::{decode_yaml_repr, TempConfigStore},
     Component, Components,
 };
-use zksync_env_config::FromEnv;
+use zksync_env_config::{FromEnv, FromEnvChain, Chain};
+
 use zksync_eth_client::clients::Client;
 use zksync_node_framework::implementations::layers::logger_for_testing::Log;
 
@@ -161,8 +162,18 @@ fn main() -> anyhow::Result<()> {
 
     let consensus = config::read_consensus_config().context("read_consensus_config()")?;
 
-    let contracts_config = match opt.contracts_config_path {
-        None => ContractsConfig::from_env().context("contracts_config")?,
+    let contracts_config = match opt.contracts_config_path.clone() {
+        None => ContractsConfig::from_env_chain(Chain::ETH).context("contracts_config")?,
+        Some(path) => {
+            let yaml =
+                std::fs::read_to_string(&path).with_context(|| path.display().to_string())?;
+            decode_yaml_repr::<zksync_protobuf_config::proto::contracts::Contracts>(&yaml)
+                .context("failed decoding contracts YAML config")?
+        }
+    };
+
+    let bnb_contracts_config = match opt.contracts_config_path.clone() {
+        None => ContractsConfig::from_env_chain(Chain::BNB).context("contracts_config")?,
         Some(path) => {
             let yaml =
                 std::fs::read_to_string(&path).with_context(|| path.display().to_string())?;
@@ -197,7 +208,8 @@ fn main() -> anyhow::Result<()> {
         configs,
         wallets,
         genesis,
-        contracts_config,
+        contracts_config.clone(),
+        bnb_contracts_config.clone(),
         secrets,
         consensus,
     )
@@ -212,6 +224,7 @@ fn run_genesis_if_needed(
     contracts_config: &ContractsConfig,
     secrets: &Secrets,
 ) -> anyhow::Result<()> {
+    Log::new("main.rs", format!("this is genesis being run {:?}", contracts_config).as_str()).log();
     let tokio_runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()?;

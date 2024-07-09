@@ -66,6 +66,7 @@ pub struct MainNodeBuilder {
     wallets: Wallets,
     genesis_config: GenesisConfig,
     contracts_config: ContractsConfig,
+    bnb_contracts_config: ContractsConfig,
     secrets: Secrets,
     consensus_config: Option<ConsensusConfig>,
 }
@@ -76,6 +77,7 @@ impl MainNodeBuilder {
         wallets: Wallets,
         genesis_config: GenesisConfig,
         contracts_config: ContractsConfig,
+        bnb_contracts_config: ContractsConfig,
         secrets: Secrets,
         consensus_config: Option<ConsensusConfig>,
     ) -> Self {
@@ -85,6 +87,7 @@ impl MainNodeBuilder {
             wallets,
             genesis_config,
             contracts_config,
+            bnb_contracts_config,
             secrets,
             consensus_config,
         }
@@ -236,6 +239,7 @@ impl MainNodeBuilder {
         self.node.add_layer(ChainWatchLayer::new(
             try_load_config!(eth_config.watcher),
             self.contracts_config.clone(),
+            self.bnb_contracts_config.clone(),
         ));
         Log::new("node_builders.rs", "reached here2").log();
         Ok(self)

@@ -95,7 +95,7 @@ export function load() {
 
 // places the environment logged by `zk init` variables into the .init.env file
 export function modify(variable: string, value: string, initEnv: string, withReload = true) {
-    const assignedVariable = value.startsWith(`${variable}=`) ? value : `${variable}=${value}`;
+    const assignedVariable = value.startsWith(`${variable}=`) ? value : `${variable}=${value.split("=")[1]}`;
     fs.mkdirSync('etc/env/l2-inits', { recursive: true });
     fs.mkdirSync('etc/env/l1-inits', { recursive: true });
     if (!fs.existsSync(initEnv)) {

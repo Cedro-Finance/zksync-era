@@ -8742,6 +8742,7 @@ dependencies = [
  "zksync_merkle_tree",
  "zksync_multivm",
  "zksync_system_constants",
+ "zksync_test_logger",
  "zksync_types",
  "zksync_utils",
 ]

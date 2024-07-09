@@ -38,14 +38,20 @@ pub struct ChainWatchLayer {
     // sw: changed the name from EthWatchLayer to ChainWatchLayer
     chain_watch_config: ChainWatchConfig,
     contracts_config: ContractsConfig, // sw: maybe needed to add here
+    bnb_contracts_config: ContractsConfig,
 }
 
 impl ChainWatchLayer {
-    pub fn new(chain_watch_config: ChainWatchConfig, contracts_config: ContractsConfig) -> Self {
+    pub fn new(
+        chain_watch_config: ChainWatchConfig,
+        contracts_config: ContractsConfig,
+        bnb_contracts_config: ContractsConfig,
+    ) -> Self {
         Log::new("layers/eth_watch.rs", "reached in ChainWatchLayer");
         Self {
             chain_watch_config,
-            contracts_config,
+            contracts_config: contracts_config.clone(),
+            bnb_contracts_config: bnb_contracts_config.clone(),
         }
     }
 }
@@ -77,17 +83,18 @@ impl WiringLayer for ChainWatchLayer {
             self.contracts_config.governance_addr,
             self.chain_watch_config.confirmations_for_eth_event,
         );
+        Log::new("eth_watch.rs", "created eth client").log();
 
         // sw: have used all the contract details of the ethereum client, need to use the contract details of the bnb chain itself.
         let bnb_client = ChainHttpQueryClient::new(
             String::from("bnb_client"),
             client.clone(),
-            self.contracts_config.diamond_proxy_addr,
-            self.contracts_config
+            self.bnb_contracts_config.diamond_proxy_addr,
+            self.bnb_contracts_config
                 .ecosystem_contracts
                 .clone()
                 .map(|a| a.transparent_proxy_admin_addr),
-            self.contracts_config.governance_addr,
+            self.bnb_contracts_config.governance_addr,
             self.chain_watch_config.confirmations_for_bnb_event,
         );
         Log::new("eth_watch.rs", "created bnb client").log();
@@ -100,13 +107,14 @@ impl WiringLayer for ChainWatchLayer {
             diamond_proxy_address: self.contracts_config.diamond_proxy_addr,
             poll_interval: self.chain_watch_config.poll_interval(ETH),
         }));
+        Log::new("eth_watch.rs", "added task to listen from the eth chain").log();
 
         context.add_task(Box::new(ChainWatchTask {
             name: String::from("binance"),
             main_pool: main_pool.clone(),
             client: bnb_client,
             governance_contract: governance_contract(),
-            diamond_proxy_address: self.contracts_config.diamond_proxy_addr,
+            diamond_proxy_address: self.bnb_contracts_config.diamond_proxy_addr,
             poll_interval: self.chain_watch_config.poll_interval(BNB),
         }));
         Log::new("eth_watch.rs", "added task to listen from the bnb chain").log();
