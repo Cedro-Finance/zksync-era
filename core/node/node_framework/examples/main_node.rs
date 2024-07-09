@@ -184,7 +184,7 @@ impl MainNodeBuilder {
         self.node.add_layer(ChainWatchLayer::new(
             ChainWatchConfig::from_env()?,
             ContractsConfig::from_env()?,
-            ContractsConfig::from_env()?
+            ContractsConfig::from_env()?,
         ));
         Ok(self)
     }

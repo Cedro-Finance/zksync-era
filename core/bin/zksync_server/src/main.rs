@@ -24,8 +24,7 @@ use zksync_core_leftovers::{
     temp_config_store::{decode_yaml_repr, TempConfigStore},
     Component, Components,
 };
-use zksync_env_config::{FromEnv, FromEnvChain, Chain};
-
+use zksync_env_config::{Chain, FromEnv, FromEnvChain};
 use zksync_eth_client::clients::Client;
 use zksync_node_framework::implementations::layers::logger_for_testing::Log;
 
@@ -224,7 +223,11 @@ fn run_genesis_if_needed(
     contracts_config: &ContractsConfig,
     secrets: &Secrets,
 ) -> anyhow::Result<()> {
-    Log::new("main.rs", format!("this is genesis being run {:?}", contracts_config).as_str()).log();
+    Log::new(
+        "main.rs",
+        format!("this is genesis being run {:?}", contracts_config).as_str(),
+    )
+    .log();
     let tokio_runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()?;

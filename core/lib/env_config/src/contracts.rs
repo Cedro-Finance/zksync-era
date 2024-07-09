@@ -1,6 +1,6 @@
 use zksync_config::{configs::EcosystemContracts, ContractsConfig};
 
-use crate::{envy_load, FromEnv, FromEnvChain, Chain};
+use crate::{envy_load, Chain, FromEnv, FromEnvChain};
 
 impl FromEnv for EcosystemContracts {
     fn from_env() -> anyhow::Result<Self> {
@@ -190,7 +190,7 @@ CONTRACTS_BASE_TOKEN_ADDR="0x0000000000000000000000000000000000000001"
         assert_eq!(actual, expected_config());
     }
 
-    #[test] 
+    #[test]
     fn from_env_chain() {
         let mut lock = MUTEX.lock();
         let config = r#"

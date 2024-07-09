@@ -20,18 +20,18 @@ export async function verifyL1Contracts(): Promise<void> {
 
 export function updateContractsEnv(initEnv: string, deployLog: String, envVars: Array<string>): string {
     let updatedContracts = '';
-    console.log("😍😍😍😍😍😍 top this is where i have modified the contents😍😍😍😍😍😍")
+    console.log('😍😍😍😍😍😍 top this is where i have modified the contents😍😍😍😍😍😍');
     for (const envVar of envVars) {
         const pattern = new RegExp(`${envVar}=.*`, 'g');
         const matches = deployLog.match(pattern);
         if (matches !== null) {
             const varContents = matches[0];
             env.modify(envVar, varContents, initEnv, false);
-            console.log("😍😍😍😍😍😍this is where i have modified the contents😍😍😍😍😍😍")
-            let ethVar = envVar.substring(0, 10) + "ETH_" + envVar.substring(10, envVar.length)
-            let bnbVar = envVar.substring(0, 10) + "BNB_" + envVar.substring(10, envVar.length)
-            env.modify(ethVar, varContents, initEnv, false)
-            env.modify(bnbVar, varContents, initEnv, false)
+            console.log('😍😍😍😍😍😍this is where i have modified the contents😍😍😍😍😍😍');
+            let ethVar = envVar.substring(0, 10) + 'ETH_' + envVar.substring(10, envVar.length);
+            let bnbVar = envVar.substring(0, 10) + 'BNB_' + envVar.substring(10, envVar.length);
+            env.modify(ethVar, varContents, initEnv, false);
+            env.modify(bnbVar, varContents, initEnv, false);
             updatedContracts += `${varContents}\n`;
         }
     }
